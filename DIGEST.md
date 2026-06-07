@@ -1,8 +1,8 @@
 # odysseus-watch digest
 <!-- pewdiepie-archdaemon/odysseus -->
 
-**Last reviewed:** 2026-06-06  
-**Last reviewed SHA:** `b03d934` (fix: restore backup import after skills migration)
+**Last reviewed:** 2026-06-07  
+**Last reviewed SHA:** `b22c2b2` (fix(hwfit): detect NVIDIA GPU on WSL and other minimal-PATH environments)
 
 ---
 
@@ -19,6 +19,69 @@
 | #3148 | Security — gallery null-owner read bypass when auth enabled |
 | #236  | Security — encrypted-at-rest secrets via SOPS (long-running PR) |
 | #605  | Architecture v3 proposal — restructures scheduler, cookbook, deep-research |
+
+---
+
+## 2026-06-07 — 44 commits, ~30 PRs merged, security sweep
+
+### Watching list status changes
+
+- ✅ **PR #3139 MERGED** (`2a6921a`, 15:08 UTC) — fixes logical bugs in event bus and bulk session deletion; this is the fix for **#3144** (next_run validation + starred-session bypass). Both should now be closed.
+- ⚠️ **#3148** (gallery null-owner bypass) — Vykos landed `67aeea4` "Scope gallery image endpoints by owner" (#3001); a duplicate PR #3286 was explicitly closed as dup. Likely addressed but watch for formal close.
+- ⚠️ **#3136** (deep-research 404) — two related fixes merged (PR #2189: preserve partial findings; PR #2229: fix IndexError in category parser) but the `/api/research/status` 404 itself has no direct fix yet. Still open.
+- 🔴 **PR #3158, #3150, #3100, #236** — no activity today; still open.
+- 📝 **#605** (Arch v3 proposal) — saw fresh activity today; still open.
+
+### Security — NEW open issues (act on these)
+
+- **#3200 OPEN** DNS rebinding SSRF in `services/search/content.py` `_get_public_url` — attacker can route fetch requests to private network hosts. No fix yet. **Critical for network-accessible deployments.**
+- **#3201 OPEN** Unauthenticated bash/python tool access before first admin is created — `owner_is_admin_or_single_user()` grants full tool access during the setup window. Exploitable on first-run.
+- **#3227 OPEN** `app_api` token can reach shell-adjacent Cookbook control routes — partial: `a3784da` blocked direct shell routes, but Cookbook mutation endpoints remain reachable.
+- **#3229 OPEN** `allow_bash` flag only read from form data, ignored for JSON-body API requests — bash/web tools silently disabled for all API callers; also a correctness regression.
+
+### Security — fixes merged today
+
+- `a3cb15d` **fix(agent): enforce guide-only tool policy** (#3088) — closes **#3068** (agent executing shell despite guide-only instruction).
+- `a3784da` **fix: block app_api access to shell routes** (#3225) — closes **#3224**.
+- `cbbb41d` **fix: avoid double bcrypt on login** (#3236) — closes **#3230** (login bug, not a direct attack vector but worth noting).
+- `f78539b` **fix(caldav): disable redirects on sync/write-back DAVClient** (#2663) — SSRF via CalDAV redirect following.
+- `95c2dca` **fix(security): add HSTS and Permissions-Policy headers** (#3081) — hardens TLS enforcement and feature access.
+- Vykos sweep (~8 commits): owner-scoped gallery (#3001), gallery albums (#3004), doc session links (#3005), task chains (#3006), model helpers (#3007), vision model resolution (#3009), RAG upload privilege (#2990), auxiliary LLM endpoints (#2996). Multi-user data-isolation tightening across the board.
+- `000932a` **fix(auth): gate api tokens from user routes** (#2992) — part of the #3150 capability-hardening work; PR #3150 itself still open.
+
+### Task scheduler
+
+- **PR #3139 MERGED** — see watching list above; resolves #3144.
+- `5d3e3c7` feat(tasks): assign folder='Tasks' at creation + backfill migration — new UX polish, not a bug fix.
+- `7b4e6c4` Enforce task chain owner scope — multi-user isolation fix.
+
+### Deep research
+
+- **PR #2189 MERGED** — preserve partial findings when a non-timeout error aborts a research run (data no longer lost on intermittent failures).
+- **PR #2229 MERGED** — fix double `split()` / IndexError in category parser.
+- **#3136** (`/api/research/status` 404) — still open; no direct fix merged.
+
+### Cookbook
+
+- **PR #3306 MERGED** (`b22c2b2`) — NVIDIA GPU detection on WSL / minimal-PATH envs; closes #3307.
+- **PR #2657 MERGED** — APFEL platform support (Apple Silicon dependency set + models in catalog).
+- `573d431` **MERGED** — don't infer server OS from browser user-agent (#3221 closed) — llama.cpp was emitting Windows-only commands on Mac/Linux servers when accessed from a Windows browser. Significant bug.
+- **#3100** (Windows local download/CUDA fixes) — no activity, still open.
+
+### Other notable
+
+- **PR #3183 MERGED** (`adbcb37`) — fix(agent): don't abort legitimate tool batches as runaway loops — agent was misidentifying valid multi-tool responses as infinite loops. Reliability improvement.
+- `04d6a5c` **MERGED** — Fix CORS preflight 401'd by AuthMiddleware before CORS headers applied — broke cross-origin requests with `AUTH_ENABLED=true`.
+- **PR #3301 open** — feat(auth): generic OIDC SSO — big feature, enables enterprise SSO with any OIDC provider.
+- **PR #3310 open** / **#3309 open** — Electron desktop wrapper; community demand is high.
+- **#3254 open** — AI hallucinates dates in tool calls (June 10 requested → Jan 15 executed) — prompt/date-context bug.
+- **#3229 open** — bash/web tools silently disabled for API JSON callers (see security section too; also a UX bug).
+- **#3266/#3265** open — refactor streamed agent turn out of `agent_loop.py`; relates to the Architecture v3 direction (#605).
+
+### External
+
+- Project available one-click via [Pinokio](https://beta.pinokio.co/apps/github-com-pewdiepie-archdaemon-odysseus); broadening reach.
+- Coverage in Cybernews, DEV.to, and tech blogs (launch hype still running). 44k+ stars as of June 4; expect issue volume to stay high.
 
 ---
 
