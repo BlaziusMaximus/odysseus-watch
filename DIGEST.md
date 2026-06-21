@@ -1,8 +1,8 @@
 # odysseus-watch digest
 <!-- pewdiepie-archdaemon/odysseus -->
 
-**Last reviewed:** 2026-06-06  
-**Last reviewed SHA:** `b03d934` (fix: restore backup import after skills migration)
+**Last reviewed:** 2026-06-21  
+**Last reviewed SHA:** `076e8c9` (fix(ui): escape model name in model-info popup — DOM-XSS)
 
 ---
 
@@ -19,6 +19,62 @@
 | #3148 | Security — gallery null-owner read bypass when auth enabled |
 | #236  | Security — encrypted-at-rest secrets via SOPS (long-running PR) |
 | #605  | Architecture v3 proposal — restructures scheduler, cookbook, deep-research |
+
+---
+
+## 2026-06-21
+
+### Watched list — status changes
+
+- **#605 Architecture v3**: Most active watched item — 3 open implementation PRs: **#2567** (Nix devShell), **#2568** (NixOS/nix-darwin modules, updated Jun 20), **#4540** (chatRenderer refactor, **has merge conflict**). Read before touching `background/`, scheduler, or cookbook.
+- **#3144, #3136, #3148** (scheduler next_run bug, research 404, gallery null-owner bypass): No detectable new activity since Jun 6. All presumed still open. #4620 (below) is a related-but-separate new deep-research timeout report.
+- **#3139, #3100, #3158, #3150, #236** (watched PRs): Not in recent merge activity; presumed still open, no merges detected.
+
+### Security (act first)
+
+- **MERGED `93569b1`** `fix(security)`: allowlist `manage_mcp 'add'` to close **agent-path RCE** (#4433, Jun 16) — agent could register arbitrary MCP servers via the manage_mcp tool. If self-hosting, update now.
+- **MERGED `076e8c9`** `fix(ui)`: escape model name in model-info popup — **DOM-XSS** + 2 latent sinks (#4605, Jun 19) — LLM response could inject HTML via `innerHTML`; fixes issue #4604 (closed same day).
+- **MERGED `1602674`** `fix(personal)`: scope RAG file delete to caller's own upload dir (#4602, Jun 19) — was using shared root; path-traversal-adjacent. Fixes issue #4603 (closed same day).
+- **MERGED `7b09491`** `fix`: calendar digest **leaked every user's events** (missing owner scope) (#1925, Jun 16) — multi-user data exposure, now fixed.
+- **MERGED `4e47774`** `harden(agent-loop)`: wrap non-native tool results as untrusted data (#1629, Jun 16) — tightens prompt-injection surface on external tool responses.
+- **MERGED** owner/scope fixes: email MCP boundaries (`260ce8b`), memory server per-owner (`422f23f`), gallery image path confinement (`745c10e`) — all Jun 16; closes a cluster of cross-user data-access holes.
+- **MERGED `396e26b`** `fix(auth)`: tie remember-me cookie lifetime to `TOKEN_TTL` (#4472, Jun 18) — sessions were outliving token expiry.
+- **PR #4659 open** `feat(api)`: self-serve API token management in Settings → Account — user-facing companion to watched #3150 (admin-only token hardening).
+- **Issue #3222 open** (web search): Agent executes Markdown code fences as tool calls → accidental commands + loops — safety concern, not yet fixed.
+
+### Task scheduler
+
+- **MERGED `dd20c2b`** `fix(tasks)`: offer shell/file tools to scheduled task agents by default (#4398, Jun 16) — agents were running without their expected tools.
+- **Issue #4653 open** / **PR #4652 open** Scheduled task agents describe tool calls in prose instead of calling them — small models role-play tools instead of invoking them; PR #4652 is the proposed fix.
+- **Issue #4618 open** Scheduled tasks with explicit base `endpoint_url` silently return empty response — bare URL not normalized to `/chat/completions`.
+
+### Deep-research
+
+- **Issue #4620 open** Deep Research times out frequently — new report, related to watched #3136 but distinct; no fix landed yet.
+- **PR #4628 open** `fix(research)`: increase LLM call timeouts in research handler — prevents cold-start failures with large local models.
+
+### Cookbook
+
+- **MERGED** four fixes Jun 18–19: stop Windows process trees (`057ec05`), validate agent SSH targets (`1cc8a37`), pull llama.cpp from ggml-org GHCR namespace (`a52ac68`), scope "Kill vLLM" diagnosis to actual vLLM tracebacks (`e7ffc69`).
+- **PR #4374 open** Auto-detect CUDA on Windows + install GPU `llama-cpp-python` wheels — extends watched #3100 scope.
+- **Issue #4615 open** Cookbook detects GPU but llama-cpp still falls back to CPU.
+- **PR #3515 open** Clean up stale `.incomplete` markers on download completion.
+
+### Other notable
+
+- **PR #4033 open** `feat`: native Google Gemini API support with payload builder + streaming — first-class Gemini alongside OpenAI-compat hosts; companion to #3140 from last digest.
+- **MERGED `d795d9a`** `feat(launcher)`: portable Windows launcher (#976, Jun 16) — no-Docker Windows entry point finally lands.
+- **PR #4687 open** `feat`: centralized Axios API client — replaces scattered `fetch()` calls across the frontend.
+- **PR #4423 open** `refactor(tools)`: split 4,101-line `tool_implementations.py` into `src/tools/` package (Phase 0) — prerequisite for #605 restructure.
+- **Issue #4541 open** Every message invalidates llama.cpp KV cache — system prompt changes each turn; significant perf impact for local model users.
+- **Issue #4644 open** / **PR #4661 open** Browser OOM/freeze in long agent sessions (multi-GB RAM from tool call accumulation).
+- **MERGED `a226c94`** Remove unused `@anthropic-ai/sdk` npm dependency (Jun 19).
+
+### External discussion
+
+- Stars: **75.3k** (was 58k at last review; +17k in ~15 days).
+- Pinokio one-click install now available — lowers barrier to entry significantly.
+- ChatForest published a review; DEV.to article ("the point is bigger than the hype") getting traction; AyyazTech cheap-VPS guide circulating.
 
 ---
 
