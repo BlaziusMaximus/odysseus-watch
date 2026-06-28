@@ -1,8 +1,8 @@
 # odysseus-watch digest
 <!-- pewdiepie-archdaemon/odysseus -->
 
-**Last reviewed:** 2026-06-06  
-**Last reviewed SHA:** `b03d934` (fix: restore backup import after skills migration)
+**Last reviewed:** 2026-06-28  
+**Last reviewed SHA:** `927b1f7` (fix(llm): normalize OpenAI-compatible chat URLs)
 
 ---
 
@@ -10,15 +10,82 @@
 
 | Item | Why |
 |------|-----|
-| #3144 | Task scheduler — event-triggered tasks may be skipped (next_run validation bug) |
-| #3139 | PR: Fix logical bugs in event bus and bulk session deletion |
-| #3136 | Deep-research — /api/research/status returns 404 |
-| #3100 | Cookbook — Windows local download + serve fixes (PR open) |
-| #3158 | Security — deny agent file tools access to credential/session stores (PR open) |
-| #3150 | Security — Harden API token route capabilities (PR open) |
+| #3158 | Security — deny agent file tools access to credential/session stores (stalled: merge conflict) |
+| #3150 | Security — Harden API token route capabilities (stalled: draft, no activity) |
 | #3148 | Security — gallery null-owner read bypass when auth enabled |
-| #236  | Security — encrypted-at-rest secrets via SOPS (long-running PR) |
-| #605  | Architecture v3 proposal — restructures scheduler, cookbook, deep-research |
+| #3068 | Security — agent executes shell commands despite guide-only / no-tools instruction |
+| #236  | Security — encrypted-at-rest secrets via SOPS (active, 22 comments) |
+| #3136 | Deep-research — /api/research/status returns 404 (partially addressed, monitor) |
+| #3100 | Cookbook — Windows local download + serve fixes (companion #4894 open) |
+| #4986 | Security — research result file paths not confined (new, path traversal risk) |
+| #3566 | Security — Codex audit remediation, 16 issues (stalled: merge conflict) |
+| #605  | Architecture v3 proposal — ADRs in progress; routes refactor underway |
+
+---
+
+## 2026-06-28
+
+### Watching — status changes
+
+- **RESOLVED #3144 + #3139** — event bus next_run skip bug + bulk-delete starred-session bypass: both closed/merged 2026-06-07. Good news; both bugs fixed within a day of the last review.
+- **#3158 STALLED** — "needs work" + merge conflict labels; no maintainer activity since June 12. The credential/session store read-gap (allows prompt injection → token exfiltration → account takeover) is still unpatched. New #4844 (vault contract) and #4986 (research path confinement) are moving in the same direction but don't close this.
+- **#3150 STALLED** — still a draft; zero activity since it opened June 6.
+- **#236 (SOPS) ACTIVE** — 22 comments, last updated June 26; still open. Companion PR #4254 (align `.gitignore`/`.dockerignore` for SOPS artifacts) was **merged June 15** — incremental progress.
+- **#3136 (research 404) PARTIAL** — research domain moved to `routes/research/` subpackage (#4975 merged) and deep-research reuse improved (#4784 merged); original issue state unconfirmed, monitor.
+- **#3148 (gallery null-owner bypass) OPEN** — new PR #4981 (harden gallery endpoint URL handling) is open and related; issue itself unchanged.
+- **#605 (Architecture v3) ACTIVE** — 102 comments, updated June 27; being formalized into ADRs via PRs #987 + #1013. Gallery routes (#4903) and research routes (#4975) already moved — v3 is shipping in pieces.
+
+### Security (act on these first)
+
+- **MERGED — ReDoS sweep** (June 26–28): Four regex denial-of-service bugs found and patched in rapid succession. All in LLM output-parsing paths — an attacker who can steer model output could hang the process. **Update now if self-hosting.**
+  - #4704: LLM-output tool/think parsers
+  - #4877: agent_loop `<think>` tag stripper
+  - #4941: XML and args tool-call parsers
+  - #4943: verdict-prose and continuation matchers
+- **MERGED #4554** — codex cookbook routes now gated behind admin check for cookie sessions; unauthenticated users could previously access codex endpoints.
+- **MERGED #3584** — untrusted LLM context isolated from visible user prompts (companion to the deep-research sandbox fix last digest).
+- **MERGED #4447** — config lock added around auth migration methods (race condition).
+- **NEW OPEN #4986** — research result file paths not confined; path traversal risk in research routes. PR open, not yet merged.
+- **NEW OPEN #4981** — harden gallery endpoint URL handling; related to watched #3148.
+- **NEW OPEN #4965** — wrap email style, integration, and MCP descriptions as untrusted context.
+- **STALLED #3158** — credential/session store read gap still unpatched (see Watching above).
+
+### Task scheduler
+
+- **MERGED #4878** — scheduled-task run time moved from system prompt into a user-role message, preserving the Anthropic prompt cache; previously the minute-stamped time was busting cache on every single scheduled run (issue #4850 closed). Big efficiency win for anyone running frequent scheduled tasks.
+- **MERGED #4812** — MCP builtin startup tasks now retained, npx probe reaped on cancel.
+- **MERGED #4545** — cookbook serve tasks now preserve `sshPort`/`platform` metadata across server restarts (issue #4544 closed).
+
+### Deep-research
+
+- **MERGED #4784** — improve uploaded document retrieval and deep-research result reuse across sessions.
+- **MERGED #4975** — research domain refactored into `routes/research/` subpackage (Architecture v3 progress).
+- **OPEN #4986** — new: research result file paths not confined (path traversal, see Security above).
+
+### Cookbook
+
+- **MERGED #4803** — cookbook serve now accepts `$(find)` subshells in command validation.
+- **MERGED #4811** — runtime `--user` installs now replay user-site `.pth` hooks; fixes packages like realesrgan/CUDA tools that install but aren't recognized (issue #4810 closed).
+- **MERGED #4834** — self-host troubleshooting cookbook added to docs.
+- **OPEN #4894** — new: activate local Windows venv in bash runner (companion to watched #3100 Windows fixes).
+- **OPEN #4535** — new: proxy ollama serve to Docker host when running in Docker.
+- **OPEN #4921** — replace deprecated `hf_transfer` with `hf_xet` in cookbook routes.
+
+### Other notable
+
+- **OPEN #4984** — full-packaged Electron desktop app with bundled Python server; first serious desktop-native path. Significant for non-technical users.
+- **OPEN #4959** — Design Maker: dedicated Claude-Design-style surface. New major feature.
+- **OPEN #4076** — unified Markdown model + preview-panel editor for notes. Substantial notes rework.
+- **OPEN #3566** — Codex integration audit remediation: 16 issues resolved (3×P1 including removing fragile `_as_owner` state-patching, plugin zip hardened, structured audit log). Currently stalled on merge conflict — worth watching.
+- **OPEN #3400** — companion mobile contract (backend-only; 19 comments, active discussion); Ed25519 signed commands, scoped bearer tokens, owner-scoped pairing.
+- **OPEN #4844** — internal secrets vault contract and System configuration; moving in the direction of #236 and #3158.
+
+### External discussion
+
+- Project hit ~77k stars + 10k forks by mid-June. Growth steady.
+- XDA Developers review: "I tried PewDiePie's open-source AI workspace, and it's weirdly great."
+- Multiple tech blog write-ups (explainx.ai, ChatForest, gavinj.net, DEV community, Medium × 2). Tone: positive on local-first approach, caveats around setup complexity and agent permissions.
+- Same HN thread from launch still cited; no major new HN discussion found since June 6.
 
 ---
 
