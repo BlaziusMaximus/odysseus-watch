@@ -1,8 +1,8 @@
 # odysseus-watch digest
 <!-- pewdiepie-archdaemon/odysseus -->
 
-**Last reviewed:** 2026-06-06  
-**Last reviewed SHA:** `b03d934` (fix: restore backup import after skills migration)
+**Last reviewed:** 2026-07-05  
+**Last reviewed SHA:** `2826dcf` (fix(tasks): gate cookbook serve task execution, #5235) — tip of `dev`, the active integration branch
 
 ---
 
@@ -10,15 +10,76 @@
 
 | Item | Why |
 |------|-----|
-| #3144 | Task scheduler — event-triggered tasks may be skipped (next_run validation bug) |
-| #3139 | PR: Fix logical bugs in event bus and bulk session deletion |
-| #3136 | Deep-research — /api/research/status returns 404 |
-| #3100 | Cookbook — Windows local download + serve fixes (PR open) |
-| #3158 | Security — deny agent file tools access to credential/session stores (PR open) |
-| #3150 | Security — Harden API token route capabilities (PR open) |
-| #3148 | Security — gallery null-owner read bypass when auth enabled |
-| #236  | Security — encrypted-at-rest secrets via SOPS (long-running PR) |
-| #605  | Architecture v3 proposal — restructures scheduler, cookbook, deep-research |
+| #3136 | Deep-research — /api/research/status returns 404 (fix now in PR #3541) |
+| #3100 | Cookbook — Windows local download + serve fixes (PR open, near merge-ready) |
+| #3158 | Security — deny agent file tools access to credential/session stores (PR open, blocked on review) |
+| #3150 | Security — Harden API token route capabilities (draft PR, not yet merged) |
+| #3148 | Security — gallery null-owner read bypass when auth enabled (still no PR) |
+| #236  | Security — encrypted-at-rest secrets via SOPS (long-running PR, needs rebase) |
+| #605  | Architecture v3 proposal — restructures scheduler, cookbook, deep-research (routes/ split now underway) |
+| #3541 | New: PR adding the missing /api/research/status and /api/chat/stream_status endpoints — fixes #3136 |
+
+*(#3144 and #3139 dropped — resolved, see below.)*
+
+---
+
+## 2026-07-05
+
+> ~1 month since last review. This is a genuinely huge volume — **907 commits, 509 merged PRs** on `dev` since `b03d934`. This entry is curated to your priorities, not exhaustive; a full changelog isn't useful here.
+
+### Watching list — status changes
+
+- **RESOLVED** #3144 / **MERGED** #3139 (Jun 7) — event-triggered tasks no longer skipped; bulk session deletion now respects starred protection and reports accurate counts. Closed the loop from last digest.
+- #3136 still open, but **PR #3541 opened** to add the missing `/api/research/status` and `/api/chat/stream_status` endpoints — worth reviewing/merging.
+- #3100 (Windows Cookbook) still open but close: synced with `dev`, multiple contributors confirm it works locally with GPU acceleration.
+- #3158 (deny agent tools access to credential stores) still open — reviewer wants exact-path matching (not basename) plus symlink-expansion guards before merge; PR currently has conflicts.
+- #3150 (API token route hardening) still a draft, not merged.
+- #3148 (gallery null-owner read bypass) **still open, no PR** — note: PR #4981 "harden gallery endpoint URL handling" (merged Jun 30) is a *different* gallery fix (SSRF/host-validation, fixes #4980), not this one. The owner-bypass bug is still live.
+- #236 (SOPS secrets) still open, reported `DIRTY/CONFLICTING`, needs rebase onto `dev`.
+- #605 (Architecture v3) still open as a proposal, but concretely progressing: routes are actively being split into subpackages (`routes/research/`, `routes/gallery/`, `routes/contacts/`) — the restructuring it called for is happening piecemeal via merged PRs even though the tracking issue itself sits open.
+
+### Security (top of the pile — a security-fix wave, not one fix)
+
+- **SSRF / DNS-rebinding cluster (Jul 2–4):** webhook ntfy sender (#5142), webhook delivery pinned to SSRF-validated IP (#5147), integration `api_call` URL validation (#5145), httpx connections pinned to resolved IP (#704) — a coordinated hardening pass across every outbound-request path.
+- **ReDoS fixes (Jun 27–28):** verdict-prose/continuation matchers (#4943), XML and tool-call-args parsers (#4941).
+- **New feature, new leaks:** Odysseus shipped **Email + Contacts** as a feature this window, and it immediately produced a string of cross-tenant owner-scoping bugs, all since patched: #5238, #5234, #5195, #2996, #3006, #3614, #3397, #2057. Pattern worth watching if you touch this code — new surface area keeps reintroducing the same owner-scope mistake.
+- **Sensitive-file deny-list hardening:** case-insensitive matching fixed for grep/rg tool exclusions (#5013, #5097, #5189) — same threat model as your watched #3158, landed via a separate mechanism.
+- Docker host socket is now opt-in, not default-exposed (#4902).
+- Cookbook's Ollama runner no longer executes the install one-liner (#3926) — closed a code-execution vector.
+- Codex cookbook routes now gated behind an admin check for cookie sessions (#4554).
+- Credential-bearing URLs and PII now redacted from logs (#4750).
+
+### Task scheduler
+
+- #4878 (Jun 27): scheduled-task time moved into a user-role message to preserve prompt cache.
+- #4398: scheduled task agents now get shell/file tools by default — a capability expansion, not just a fix; relevant given #3158/#3148 above.
+- #5235 (Jul 5, today): gate cookbook serve task execution — security fix in the scheduler path.
+
+### Deep-research
+
+- #4975: research routes moved into `routes/research/` subpackage (part of the v3 restructure).
+- #4784: improved uploaded-document retrieval and deep-research reuse.
+- #4006: Discuss chats now stay grounded on their source report.
+- #4986 / #5129: research file-path confinement hardened, made CodeQL-clean.
+- Still nothing merged yet for #3136 itself — see PR #3541 above.
+
+### Cookbook
+
+- #3100 (your watched item) still the big one — near merge.
+- #4803: serve-command validation now accepts `$(find)` subshells without opening injection.
+- #4811: correctly recognizes runtime `--user` installs.
+- #4760: model launch only blocks on real port collisions.
+- #3975: local Windows now correctly treated as Windows for serve commands.
+
+### Other notable
+
+- No releases published yet — still tag-less, all activity is on `dev`.
+- External: project has crossed **76k+ GitHub stars** (up from 58k at launch). Coverage has turned more critical — pieces calling it "vibecoded" (AI-written, no formal security audit) are circulating alongside a detailed vulnerability write-up from security researcher Jamieson O'Reilly. The steady drip of owner-scoping/SSRF fixes above is consistent with that narrative rather than contradicting it.
+
+### External discussion
+
+- Continued mainstream coverage (DEV Community, XDA, SourceForge mirror) — reception still broadly positive but now paired with "no formal audit yet" caveats.
+- No major new controversy beyond the general "vibecoded, fast security churn" narrative; original HN thread from launch week is the reference point, nothing bigger has superseded it.
 
 ---
 
