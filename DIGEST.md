@@ -1,8 +1,8 @@
 # odysseus-watch digest
 <!-- pewdiepie-archdaemon/odysseus -->
 
-**Last reviewed:** 2026-06-06  
-**Last reviewed SHA:** `b03d934` (fix: restore backup import after skills migration)
+**Last reviewed:** 2026-07-12  
+**Last reviewed SHA:** `9844a2f` (chore(release): bump version to 1.0.2)
 
 ---
 
@@ -10,15 +10,70 @@
 
 | Item | Why |
 |------|-----|
-| #3144 | Task scheduler — event-triggered tasks may be skipped (next_run validation bug) |
-| #3139 | PR: Fix logical bugs in event bus and bulk session deletion |
-| #3136 | Deep-research — /api/research/status returns 404 |
-| #3100 | Cookbook — Windows local download + serve fixes (PR open) |
-| #3158 | Security — deny agent file tools access to credential/session stores (PR open) |
-| #3150 | Security — Harden API token route capabilities (PR open) |
-| #3148 | Security — gallery null-owner read bypass when auth enabled |
-| #236  | Security — encrypted-at-rest secrets via SOPS (long-running PR) |
-| #605  | Architecture v3 proposal — restructures scheduler, cookbook, deep-research |
+| #3136 | Deep-research — /api/research/status returns 404 (still unresolved) |
+| #3158 | Security — deny agent file tools access to credential/session stores (PR open, changes requested) |
+| #3150 | Security — Harden API token route capabilities (PR open, draft; several PRs now depend on it) |
+| #3148 | Security — gallery null-owner read bypass when auth enabled (still open) |
+| #236  | Security — encrypted-at-rest secrets via SOPS (long-running PR, awaiting rebase) |
+| #605  | Architecture v3 proposal — maintainer calls it possibly stale; see ADR #1013 instead |
+| #5263 | Security — `manage_tasks` owner-check bypass, any user can run/edit/delete others' scheduled tasks (fix PR #5264 open) |
+| #5460 | Security — email "attach from Odysseus" leaks owner-less gallery images cross-tenant + bulk zip download (fix PR #5461 open) |
+| #5431 | Task scheduler — one stuck task wedges the entire scheduler for all users (unresolved regression, see #5294/#4826) |
+
+---
+
+## 2026-07-12
+
+> 5+ weeks since last review. ~530+ PRs merged — repo stayed very hot. Dominant theme: a sustained security-hardening sprint (SSRF/IDOR/RCE/ReDoS) through June, then a rocky 1.0.2 release on Jul 11-12 that broke chat for everyone and needed same-day hotfixes.
+
+### Watching list — status changes
+
+- **RESOLVED** #3144 (scheduler skip bug) — fixed by merged PR #3139 (Jun 7). Both dropped from Watching.
+- **CLOSED unmerged** #3100 (Windows Cookbook fixes) — closed Jul 12 as stale/conflicted; maintainer asked for smaller per-issue resubmissions. Underlying Windows Cookbook bugs likely still present. Dropped from Watching.
+- #3136, #3148, #605 — no progress, still open.
+- #3158 — reviewer requested exact-path matching + symlink hardening before merge.
+- #3150 — still draft, but now blocking #3400/#3944/#3899/#3946 — worth landing soon.
+- #236 — awaiting rebase against `dev`, no material change.
+
+### Security (act on these first)
+
+- **RCE closed**: #4433 — MCP `add` path allowed remote code execution; now allowlisted.
+- **SSRF/DNS-rebinding cluster** (Jul 4): #5147, #5145, #5142, #704, #347 — pinned webhook/integration/reminder/search/diffusion-server outbound requests to SSRF-validated, resolved IPs. Recurring bug class across nearly every outbound-request feature — good sign it's now been swept systematically.
+- **IDOR/ownership-bypass cluster** (recurring "owner-less record ⇒ visible to all" pattern): #5238, #5195, #5264, #3899, #3807, #1511, #3006 fixed. **Two instances of the same bug pattern still open** — see #5263 and #5460 in Watching above.
+- **Secrets**: CardDAV password now encrypted at rest (#1741); API-key file locked to 0600 (#4197); logs redact credentials/PII (#4750).
+- **ReDoS**: fixed across LLM tool/XML/calendar/email parsers (#4877, #4704, #4708, #4712, #4941, #4943).
+
+### Task scheduler
+
+- **New, unresolved and concerning**: #5431 / #5294 / #4826 — a single wedged agent-loop stream holds the scheduler's only execution slot, so one stuck task freezes the entire system ("Queued — waiting for idle" forever, cascades to all users). Added to Watching.
+- Fixed: #5109 (PR #5110) — two racing pollers could double-send the same scheduled email.
+- #5264 — owner-scope fix for `manage_tasks` (see Security; companion issue #5263 still open).
+- #4027 — background tasks (auto-title, memory audit) moved to a cheaper "utility model" (cost fix).
+
+### Deep-research
+
+- #3136 still unresolved (see Watching).
+- Research routes refactored into `routes/research/` subpackage (#4975); file-path handling hardened (#4986/#5129).
+- Requested: restart/edit sessions (#5284), `/report` regeneration command (#5152).
+
+### Cookbook
+
+- #3100 closed unmerged (see Watching).
+- Admin gate added to cookbook routes (#4554, #5235 — security).
+- Windows: orphaned processes after cancelled download (#3995, open); serve-button UX confusion (#3594/#4510, open).
+
+### Other notable
+
+- **1.0.2 release regression (Jul 11-12)**: a `NameError: _explicit_web_intent is not defined` shipped in chat routing and broke chat for all users (duplicate reports #5291/#5297/#5305/#5310, #5424) — patched same day (#5290, #5313, #5469).
+- Route-layer reorganization continues: contacts (#5227), history (#5090), memory (#5007), research (#4975) split into subpackages.
+- Multi-arch GHCR image publishing added (#3423); CI security gate added (#3498).
+
+### External discussion
+
+- No new HN front-page moment; the May 31 launch thread (243pts/105 comments) remains the high-water mark.
+- ~77k stars / 10k forks by Jun 24, ~1,400 open issues — growth continues but issue backlog is building.
+- Press coverage (XDA, Cybernews, others) settled into "useful, but less battle-tested than Open WebUI"; recurring criticism that AI-assisted ("vibecoded") code shipped with security gaps in Agent Mode — consistent with the IDOR/SSRF cleanup above.
+- No CVE/advisory, funding, or acquisition news.
 
 ---
 
