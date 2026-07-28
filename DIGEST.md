@@ -1,64 +1,78 @@
 # odysseus-watch digest
-<!-- pewdiepie-archdaemon/odysseus -->
+<!-- odysseus-dev/odysseus (was pewdiepie-archdaemon/odysseus — org transfer 2026-07-20) -->
 
-**Last reviewed:** 2026-06-06  
-**Last reviewed SHA:** `b03d934` (fix: restore backup import after skills migration)
-
----
-
-## Watching
-
-| Item | Why |
-|------|-----|
-| #3144 | Task scheduler — event-triggered tasks may be skipped (next_run validation bug) |
-| #3139 | PR: Fix logical bugs in event bus and bulk session deletion |
-| #3136 | Deep-research — /api/research/status returns 404 |
-| #3100 | Cookbook — Windows local download + serve fixes (PR open) |
-| #3158 | Security — deny agent file tools access to credential/session stores (PR open) |
-| #3150 | Security — Harden API token route capabilities (PR open) |
-| #3148 | Security — gallery null-owner read bypass when auth enabled |
-| #236  | Security — encrypted-at-rest secrets via SOPS (long-running PR) |
-| #605  | Architecture v3 proposal — restructures scheduler, cookbook, deep-research |
+**Last reviewed:** 2026-07-28
+**Last reviewed SHA:** `01790c2` (fix(mcp): keep built-in servers on SDK v1 (#5820), branch `dev`)
+**Prior review:** 2026-06-06 @ `b03d934`
 
 ---
 
-## 2026-06-06 — bootstrap entry
+## TL;DR for Adam
 
-> First run. Project launched 2026-05-31; 58k+ stars in one week. Very active — 111 commits and ~50 PRs/issues in the last six days alone.
+- **The repo moved.** `pewdiepie-archdaemon/odysseus` → **`odysseus-dev/odysseus`** (org transfer, ~2026-07-20). The old URL/API 301-redirects, so nothing breaks yet, but the tracker now points at the new canonical name.
+- **Still exploding.** ~62.3k stars (was 58k). ~1,018 commits on `dev` since the last review; issue/PR numbering jumped from ~3,150 to ~5,820 (~2,700 new items in ~7.5 weeks). 991 open issues+PRs.
+- **Ships from `dev`, not releases.** Still no GitHub Releases/tags. Internal version bumped to **1.0.2** (chore commits, 2026-07-11 / 2026-07-18). Maintainers commit directly to `dev`; most outside PRs get cherry-picked or closed rather than merged.
+- **Mass PR purge on 2026-07-23.** The owner (`pewdiepie-archdaemon`) bulk-closed **93 PRs in one pass**, alongside a curated `d8a2059 "Merge verified Odysseus fixes"`. Several security PRs we were watching (#3158, #3150, #236) were swept in this — **closed unmerged**. Good news: the underlying concerns were largely fixed via *direct commits* instead (see Security). Bad news: any self-hoster who was waiting on those specific PRs should re-check against `dev`, not the PR.
+- **Nothing here is an emergency for our box.** We run Odysseus as the AI-agent platform; the security fixes below have already landed on `dev`. If we ever pin a specific commit, pin at/after the fixes noted below.
 
-### Security (act on these first)
+---
 
-- **MERGED `e87a1ad`** `fix(deep-research)`: wrap fetched webpage content in untrusted-context sandbox — raw page content was going straight into LLM prompts via string substitution, bypassing `prompt_security.py`. Prompt-injection hole, now fixed. Fixes #3044. **Update now if self-hosting.**
-- **PR #3158 open** `fix(tools)`: deny agent file tools access to Odysseus' own credential/session stores — agent could read auth tokens off disk; needs merge.
-- **PR #3150 open** Harden API token route capabilities — adds default-deny enforcement for `ody_...` bearer tokens; companion to issues #3092 / #3090 / #3097.
-- **Issue #3148 open** Order-dependent test failures + gallery null-owner read bypass when auth is enabled — unauthenticated users can read gallery items with no owner set.
-- **Issue #3068 open** Agent executes shell commands despite explicit guide-only / no-tools instruction — correctness + safety concern.
-- **PR #236 open** Support optional encrypted-at-rest secrets via SOPS — long-standing security enhancement, still awaiting merge.
+## Watching (carry-forward)
 
-### Task scheduler
+| Item | State now | Note |
+|------|-----------|------|
+| #3144 scheduler skip / bulk-delete bypass | **CLOSED** | Fixed by #3139 (merged 2026-06-07) |
+| #3139 PR: event-bus + bulk-session-deletion fix | **MERGED** 06-07 | resolved |
+| #3143 PR: ddgs swap (duckduckgo-search deprecated) | **MERGED** 06-10 | resolved (#3142 closed) |
+| #3068 agent runs shell despite guide-only | **CLOSED** | resolved 06-07 |
+| #3141 Ollama tool-calling regression (Win) | **CLOSED** | resolved 06-07 |
+| #3136 research `/api/research/status` 404 | **OPEN** | still open (upd 07-09); research status polling |
+| #3148 gallery null-owner read bypass (auth on) | **OPEN** | **stale** (upd 06-06); unauth read of null-owner gallery items — verify against `dev` |
+| #3100 PR: Cookbook Windows fixes | **CLOSED unmerged** | swept in 07-23 purge; Windows Cookbook may still be rough |
+| #3158 PR: deny agent tools access to cred/session stores | **CLOSED unmerged** | swept 07-23; see Security below |
+| #3150 PR: harden API token route caps | **CLOSED unmerged** | concern addressed by merged #4054 (see Security) |
+| #236 PR: SOPS encrypted-at-rest secrets | **CLOSED unmerged** | swept 07-23; not landed |
+| #3140 PR: Gemini-native REST | **CLOSED unmerged** | swept 07-23 |
+| #605 Architecture v3 proposal | **OPEN** | being implemented incrementally — `routes/*` subpackage refactors are landing on `dev` |
 
-- **Issue #3144 open** Event-triggered tasks may be skipped: `next_run` validation rejects immediate triggers; also, bulk session deletion bypasses `is_important` / starred protection. Two bugs in one report.
-- **PR #3139 open** Fix logical bugs in event bus and bulk session deletion — likely the fix for #3144; worth reviewing.
+---
 
-### Deep-research
+## 2026-07-28 — review (delta since 2026-06-06)
 
-- **Issue #3136 open** Frontend calls `/api/research/status` and `/api/chat/stream_status` — both return 404. Research status polling is broken.
-- **`e87a1ad`** (security fix above) is also the deep-research extractor; see Security section.
+### Security — landed on `dev` (good)
+Even though the security *PRs* got closed in the purge, the *fixes* mostly shipped as direct commits:
 
-### Cookbook
+- **`#4054` MERGED (06-15)** `fix(api): attribute bearer-token actions to the token owner on owner-scoped routes` — this is effectively the fix behind watched PR **#3150** (API token capability hardening). Bearer (`ody_...`) actions are now attributed/scoped to the token owner.
+- **`c7b3b84` (#4420)** `fix(db): restrict data/app.db to 0600` — DB file no longer world/group-readable.
+- **`93f97e7` (#5651)** `fix(email): hide OAuth tokens from config response` + **`16b04a9` (#5648)** verify mailbox identity on OAuth reconnect — the new email/OAuth stack got token-leak + identity hardening.
+- **`45b6771` (#5261)** `fix(skills): block private SSRF targets and revalidate redirects in importer` and **`b3f8b77` (#5474)** `fix(url-safety): reject RFC 6598 shared address space in strict mode` — SSRF hardening in the skills importer / URL safety layer.
+- **`0f259ea`** `fix(docker): bump Docker CLI to a patched release` — CVE bump.
+- **`b07c1e3` (#5250)** `ci: add CodeQL advanced setup to scan PRs before merge` — they added static security scanning to CI.
 
-- **PR #3100 open** `fix(cookbook)`: Windows local download + serve fixes — bash routing, progress display, CUDA llama-server support, busy-endpoint watchdog. Windows Cookbook was largely broken; this is the fix.
-- **Issue #3142 open** / **PR #3143 open** `duckduckgo-search` package deprecated — switching to `ddgs`. Affects web-search tool used by deep-research and agents.
+### Security — still open / not landed
+- **#3158** (deny agent file-tools access to Odysseus' own credential/session stores) — **closed unmerged**; no obvious direct-commit replacement found. Agents may still be able to read auth/session files off disk. Worth a spot-check on our deployment.
+- **#236** SOPS encrypted-at-rest secrets — **not landed**; secrets still at rest in plaintext config unless you roll your own.
+- **#3148** gallery null-owner read bypass — **open & stale**.
+- **#5815** (new, 07-28) *Make agent execution authority deterministic across untrusted context and prompt content* — new agent-authority / prompt-injection hardening request; open, no comments yet.
 
-### Other notable
+### What shipped / themes (last ~7.5 weeks)
+- **Email + OAuth push (07-22):** SMTP OAuth accounts, Google email OAuth through Compose, mailbox identity verification, token hiding. New first-class email/reminders capability.
+- **Architecture v3 (#605) in motion:** `routes/` being carved into per-domain subpackages (`compare`, `admin_wipe`, `cleanup`, `note`, …). The big refactor proposal is being executed incrementally on `dev`.
+- **Models capability schema (#2739):** `feat(models): define capability schema and readers` — groundwork for per-model capability gating.
+- **MCP hardening:** concurrent server connections w/ timeout handling, then pin built-in MCP servers to SDK v1 (`#5820`, 07-28) — MCP has been churny.
+- **RAG:** skip hidden/junk dirs when indexing (`#5633`).
 
-- **MERGED `b03d934`** fix: restore backup import after skills migration (#2980) — backup/restore was broken after a recent skills refactor; now fixed.
-- **MERGED `e87a1ad`** and **MERGED `893cb82`** fix(sessions): dead spinner bug when agent run detaches and page reloads — resumeStream retry in poll loop.
-- **Issue #3141 open** Commit `dc365a1` breaks tool calling / memory management for local Ollama models on Windows — regression worth watching.
-- **PR #3140 open** Add Gemini-native REST support in LLM core — Gemini models were silently falling back to OpenAI-compatible endpoint (#3145).
-- **Issue #605 open** Proposal: Architecture & Codebase Structure v3 — large refactor proposal; restructures `background/` layer including `task_scheduler`, adds `cookbook.py` module. Worth reading before making changes in those areas.
+### Current open-issue flavor (most recently active)
+- **#5782** (4 comments) Scheduled tasks interrupted by `/api/tasks/runs/recent` polling and left in a bad state — **task-scheduler reliability again** (same family as the old #3144).
+- **#5757** `manage_tasks`: model writes tool-call JSON as plain text but never executes it — agent tool-call reliability.
+- **#5814** API model providers show empty/offline in picker despite healthy backend.
+- **#5600** `tts_cache` grows without bound (no cap/TTL/eviction) — resource leak.
+- **#5792** Sent/Trash/Archive/Junk folders not found for localized (non-English) IMAP.
+- **#5788** Improve HUD and voice controls.
 
-### External discussion
+### External
+- GitHub search API refuses to index-search this repo (422 — too large / rename), so keyword issue-search is unavailable; digest built from the issues/pulls/commits list APIs instead.
 
-- Active HN thread: [Odysseus – self-hosted AI workspace](https://news.ycombinator.com/item?id=48346693) — mostly positive; feature requests around plugin ecosystem and multi-user support.
-- Project went viral on launch (May 31); 58k stars, Trendshift tracking it.
+---
+
+*Tracker: `BlaziusMaximus/odysseus-watch` · routine = migrated-routines task #2 (Odysseus GitHub tracker). Next review: on next scheduled run (~weekly).*
