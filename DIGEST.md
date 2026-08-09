@@ -1,19 +1,19 @@
 # odysseus-watch digest
 <!-- odysseus-dev/odysseus (was pewdiepie-archdaemon/odysseus — org transfer 2026-07-20) -->
 
-**Last reviewed:** 2026-07-28
-**Last reviewed SHA:** `01790c2` (fix(mcp): keep built-in servers on SDK v1 (#5820), branch `dev`)
-**Prior review:** 2026-06-06 @ `b03d934`
+**Last reviewed:** 2026-08-09
+**Last reviewed SHA:** `42da399` (fix(email): route summaries through shared LLM adapter (#5841), branch `dev`)
+**Prior review:** 2026-07-28 @ `01790c2`
 
 ---
 
 ## TL;DR for Adam
 
-- **The repo moved.** `pewdiepie-archdaemon/odysseus` → **`odysseus-dev/odysseus`** (org transfer, ~2026-07-20). The old URL/API 301-redirects, so nothing breaks yet, but the tracker now points at the new canonical name.
-- **Still exploding.** ~62.3k stars (was 58k). ~1,018 commits on `dev` since the last review; issue/PR numbering jumped from ~3,150 to ~5,820 (~2,700 new items in ~7.5 weeks). 991 open issues+PRs.
-- **Ships from `dev`, not releases.** Still no GitHub Releases/tags. Internal version bumped to **1.0.2** (chore commits, 2026-07-11 / 2026-07-18). Maintainers commit directly to `dev`; most outside PRs get cherry-picked or closed rather than merged.
-- **Mass PR purge on 2026-07-23.** The owner (`pewdiepie-archdaemon`) bulk-closed **93 PRs in one pass**, alongside a curated `d8a2059 "Merge verified Odysseus fixes"`. Several security PRs we were watching (#3158, #3150, #236) were swept in this — **closed unmerged**. Good news: the underlying concerns were largely fixed via *direct commits* instead (see Security). Bad news: any self-hoster who was waiting on those specific PRs should re-check against `dev`, not the PR.
-- **Nothing here is an emergency for our box.** We run Odysseus as the AI-agent platform; the security fixes below have already landed on `dev`. If we ever pin a specific commit, pin at/after the fixes noted below.
+- **Quiet-ish cycle.** 32 commits on `dev` since 07-28 (~12 days) — much slower than the prior 1,018-commit stretch. Issue numbering now at #5952, 954 open issues, 121 open PRs.
+- **Star count dipped then recovered — not a real signal.** Shows ~85.0k now (was 62.3k), but Discussion #5754 confirms a maintainer accidentally wiped ~20k stars and old PR history during a 07-25 repo cleanup; the number reflects recovery, not organic doubling.
+- **#5600 (tts_cache unbounded growth) is fixed** — the one concrete win from our watch list this cycle.
+- **#5815 (deterministic agent execution authority)** — the prompt-injection/agent-authority hardening issue flagged as brand-new last cycle now has four draft PRs against it (#5817–#5821). Worth a close look next review; this is the most architecturally significant thing in flight.
+- **Nothing here is an emergency for our box.**
 
 ---
 
@@ -21,19 +21,44 @@
 
 | Item | State now | Note |
 |------|-----------|------|
-| #3144 scheduler skip / bulk-delete bypass | **CLOSED** | Fixed by #3139 (merged 2026-06-07) |
-| #3139 PR: event-bus + bulk-session-deletion fix | **MERGED** 06-07 | resolved |
-| #3143 PR: ddgs swap (duckduckgo-search deprecated) | **MERGED** 06-10 | resolved (#3142 closed) |
-| #3068 agent runs shell despite guide-only | **CLOSED** | resolved 06-07 |
-| #3141 Ollama tool-calling regression (Win) | **CLOSED** | resolved 06-07 |
-| #3136 research `/api/research/status` 404 | **OPEN** | still open (upd 07-09); research status polling |
-| #3148 gallery null-owner read bypass (auth on) | **OPEN** | **stale** (upd 06-06); unauth read of null-owner gallery items — verify against `dev` |
-| #3100 PR: Cookbook Windows fixes | **CLOSED unmerged** | swept in 07-23 purge; Windows Cookbook may still be rough |
-| #3158 PR: deny agent tools access to cred/session stores | **CLOSED unmerged** | swept 07-23; see Security below |
-| #3150 PR: harden API token route caps | **CLOSED unmerged** | concern addressed by merged #4054 (see Security) |
-| #236 PR: SOPS encrypted-at-rest secrets | **CLOSED unmerged** | swept 07-23; not landed |
-| #3140 PR: Gemini-native REST | **CLOSED unmerged** | swept 07-23 |
-| #605 Architecture v3 proposal | **OPEN** | being implemented incrementally — `routes/*` subpackage refactors are landing on `dev` |
+| #3136 research `/api/research/status` 404 | **OPEN** | unchanged since 07-09 |
+| #3148 gallery null-owner read bypass (auth on) | **OPEN, stale** | no movement; #5946 (new) reports a similar gallery-auth inconsistency — same neighborhood |
+| #3158 PR: deny agent tools access to cred/session stores | **CLOSED unmerged** | no confirmed direct-commit replacement found; still worth a spot-check on our deployment |
+| #236 PR: SOPS encrypted-at-rest secrets | **CLOSED unmerged** | not landed |
+| #605 Architecture v3 proposal | **OPEN, in progress** | `routes/*` subpackage refactors continue landing (vault, webhook, document, search since 07-28) |
+| #5815 deterministic agent execution authority | **OPEN, active** | 4 draft PRs now implementing it (#5817–#5821) — capability registry, sandboxing, thread authority modes, provenance |
+| #5782 scheduler interrupted by status polling | **OPEN** | couldn't get a clean re-check this cycle (fetch issue) — re-verify next time |
+| #5757 `manage_tasks` writes tool-call JSON but doesn't execute | **OPEN** | unchanged |
+| #5946 gallery provider image actions — inconsistent auth (new) | **OPEN** | added to watch; echoes #3148 |
+| #5950 provider detection accepts suffix-lookalike hostnames (new) | **OPEN** | added to watch; spoofing-flavored |
+
+*Dropped from the table (resolved 2+ cycles ago, no longer active): #3144, #3139, #3143, #3068, #3141, #3100, #3150, #3140. #5600 resolved this cycle, see below.*
+
+---
+
+## 2026-08-09 — review (delta since 2026-07-28)
+
+### Watching-list movement
+- **#5600 tts_cache unbounded growth — CLOSED, fixed.** Merged PR **#5822** "feat(tts): implement TTS cache size limit and eviction policy" (07-29) adds `ODYSSEUS_TTS_CACHE_MAX_BYTES` + LRU eviction.
+- **#5815 agent execution authority — now has real movement.** Four draft PRs (#5817–#5821) appeared implementing the proposal in slices. Not merged yet; flagging for next cycle since it touches prompt-injection/tool-authority boundaries directly relevant to how we run agents.
+- **#3158 (deny agent access to cred/session stores) — still unresolved.** Confirmed still closed/unmerged, no new activity. A June 19 commit by contributor Kukkerem ("harden agent path confinement and prompt-injection surface") may partially cover this but scope overlap is unconfirmed — treat as still open on our end.
+
+### Security — new since 07-28
+- **#5727 → merged (`9d68618`, 08-04):** pin `api_call` to the SSRF-validated IP — closes a DNS-rebind/TOCTOU gap between validation and request.
+- **#5856 → merged (`20e7fc0`, 08-04):** require explicit `manage_skills` action/permission — tightens a capability check.
+- **New reports, not yet fixed (opened 08-08, batch #5941–#5952):** **#5950** provider-hostname spoofing (suffix lookalikes accepted), **#5946** gallery provider-image auth inconsistency (same family as #3148), **#5952** assistant/threat docs drifted from actual runtime behavior.
+
+### Scheduler / deep-research / Cookbook
+- No movement. #3136 (research status 404), #5782 (scheduler polling interruption), #5757 (manage_tasks not executing) all unchanged. Cookbook: no activity since the 07-23 purge closed #3100.
+
+### Other notable
+- Architecture v3 (#605) continues: `routes/*` split landed for search (07-28), vault (08-03), webhook (08-03), document (08-04).
+- Routine UX/bug fixes 08-06–08-08: memory-store overwrite guard, arrow-key eating unsent prompt, session URL hash regression fix, stale skills panel on reopen, startup tips rotation, email summaries routed through shared LLM adapter.
+- Still no GitHub Releases/tags published.
+
+### External
+- No significant new external coverage (HN/Reddit/press) found dated after 07-28 — only pre-baseline launch coverage and an unrelated June SSRF writeup turned up in search.
+- Note: this cycle's GitHub data came via public web pages, not the API — the connector used for this tracker is currently scoped to this repo only and can't reach `odysseus-dev/odysseus` directly. Numbers should be treated as best-effort; worth re-checking the connector scope if that matters going forward.
 
 ---
 
