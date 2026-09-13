@@ -1,9 +1,9 @@
 # odysseus-watch digest
 <!-- odysseus-dev/odysseus (was pewdiepie-archdaemon/odysseus — org transfer 2026-07-20) -->
 
-**Last reviewed:** 2026-08-24
-**Last reviewed SHA:** `b4d1293` (fix(agent): drop the empty assistant turn from an approved-action replay (#6124), branch `dev`, 2026-08-20)
-**Prior review:** 2026-07-28 @ `01790c2`
+**Last reviewed:** 2026-09-13
+**Last reviewed SHA:** `9d5c031` (fix(mcp): reject malformed Args on Add MCP Server instead of silently defaulting to [] (#6215), branch `dev`, 2026-09-11)
+**Prior review:** 2026-08-24 @ `b4d1293`
 
 ---
 
@@ -15,6 +15,31 @@
 - **Three carry-forward bugs we were watching are now FIXED on `dev`:** the unbounded `tts_cache` leak (#5600 → capped/evicted, #5822), the scheduler-killed-by-status-polling bug (#5782 → #5789), and continued SSRF hardening (skill import now resists **DNS-rebinding + TOCTOU**, #5986; `api_call` pinned to the SSRF-validated IP, #5727).
 - **⚠️ Our box is far behind.** `~/odysseus` on this server is pinned at **`463713c` (2026-06-05)** — that predates *every* fix in this digest **and** the last one: no agent-authority gate, no SSRF/DNS-rebind hardening, no DB-0600, no email token-hiding, no tts-cache cap. It is **~900+ commits behind** `dev`. Not an emergency (the box isn't public-facing), but if we ever expose Odysseus or run untrusted agent content through it, we're running the pre-hardening code. See **"Our deployment" below.**
 - **Infra bugs that hit OUR stack specifically:** several fresh issues target the exact Docker services we run — **ChromaDB volume mounted at the wrong path / RAG goes silently empty after a container recreate** (#6132, #6146, fix PR #6147), and **migrated SearXNG settings silently disabling JSON** (#6066, fix PR #6136). Worth a spot-check on our Compose. See **"Watch for our stack."**
+
+---
+
+## 2026-09-13 — review (delta since 2026-08-24)
+
+### TL;DR for Adam
+- **Quiet cycle, no watch-list movement.** Every item on the Watching list below is unchanged since 08-24 — including the two infra fix PRs we flagged (#6147 ChromaDB, #6136 SearXNG), both still open in review, not merged.
+- **Development slowed hard.** Only ~13 commits / 12 merged PRs on `dev` in this ~3.5-week window, vs. 117 commits / 91 merged PRs the cycle before — roughly a 75% drop in pace. One flagged infra bug did land: #6158 (app-cache parent ownership) is merged.
+- **Housekeeping, not features:** `dev` version aligned to **1.0.3** (#6168, #6167 hotfix, #6260 main-sync) — still no formal GitHub Release published, versioning stays internal-only. A public docs/specs site went up (#5794, #6176), now live at odysseus-dev.github.io/odysseus.
+- **Forks up 39% (621→863) on only ~1% star growth (86.1k→87.2k)** — unusual ratio, worth a raised eyebrow but no specific cause found.
+- **Nothing new on security:** no new advisories, no new CVE coverage found. (The CVSS 9.9 RCE / CVE-2026-70619 / -70620 items that turn up in searches are from June 2026, pre-date both prior digests, and are not new this cycle.)
+
+### Watching list — status check
+- No state changes: #5815 (umbrella, still open, no new slice merged since #5817), #5814, #5757, #5792, #5788, #3136, #3148, #605, #4991 all unchanged; #3158 and #236 remain closed-unmerged.
+- **#6147** (ChromaDB mount/RAG-empty fix) and **#6136** (SearXNG JSON fix) — both still **open**, active review (maintainer requested changes, author repushed, re-review requested as late as 09-06). Not yet merged; keep watching, they touch our stack.
+- **#6158** (app-cache parent ownership, listed last time as a fresh infra issue) — now **merged**.
+
+### Commits/PRs worth noting (window `b4d1293`…`9d5c031`, 08-20→09-11)
+- `#5937` switch psycopg2 → psycopg2-binary (packaging/deploy)
+- `#6228` cache a successful-but-empty Tailscale discovery lookup
+- `#6174` clean up singleflight cache on task cancellation
+- `#6215` reject malformed Args on Add MCP Server instead of silently defaulting to `[]`
+
+### External
+- No published security advisories; no notable new external discussion found beyond routine "what is Odysseus" explainer content.
 
 ---
 
