@@ -37,6 +37,14 @@
 
 ---
 
+## 2026-09-27 — run blocked (no review performed)
+
+- This scheduled run could not reach the target repo: the GitHub connector for this session was scoped to `blaziusmaximus/odysseus-watch` only (this digest repo), with no access to `odysseus-dev/odysseus` (formerly `pewdiepie-archdaemon/odysseus`). All repo-scoped calls to the target are refused under that scope, so no commits/PRs/issues/releases could be checked this run.
+- **Last reviewed SHA/date above is unchanged** (`3b6c169`, 2026-09-16) — nothing below this entry was re-verified today.
+- Action needed: re-grant this session's GitHub connector access to `odysseus-dev/odysseus` (or whatever org/repo it now lives under) so the next scheduled run can resume.
+
+---
+
 ## 2026-09-16 — review (delta since 2026-08-24)
 
 ### Activity by the numbers (window `b4d1293`…`3b6c169`, ~23 days)
