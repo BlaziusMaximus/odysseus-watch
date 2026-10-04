@@ -1,9 +1,9 @@
 # odysseus-watch digest
 <!-- odysseus-dev/odysseus (was pewdiepie-archdaemon/odysseus — org transfer 2026-07-20) -->
 
-**Last reviewed:** 2026-09-16
-**Last reviewed SHA:** `3b6c169` (fix: atomic token cache swap to eliminate race condition (#6280), branch `dev`, 2026-09-13)
-**Prior review:** 2026-08-24 @ `b4d1293`
+**Last reviewed:** 2026-10-04
+**Last reviewed SHA:** `2992bf6` (fix(tools): publish blank-body files atomically, branch `dev`, 2026-10-01)
+**Prior review:** 2026-09-16 @ `3b6c169`
 
 ---
 
@@ -34,6 +34,21 @@
 | #605 Architecture v3 proposal | **OPEN** | `routes/*` subpackage carve-out continues (task domain moved 08-17) |
 | #3158 PR deny agent tools access to cred/session stores | **CLOSED unmerged** | still no replacement; #5817 gate reduces blast radius only |
 | #236 PR SOPS encrypted-at-rest secrets | **CLOSED unmerged** | still not landed |
+
+---
+
+## 2026-10-04 — review (delta since 2026-09-16)
+
+> ⚠️ **Limited run:** the GitHub connector can't reach `odysseus-dev/odysseus` (repo not in session scope) and the unauthenticated API 403s. This review is **git-only** (commits/branches). **Issue/PR/release state and the Watching table were NOT re-verified** — carried forward unchanged.
+
+- **Quiet on `dev`:** only ~4 real commits since `3b6c169` (HEAD `2992bf6`, 10-01). No tags, no release visible; `main` last moved 09-05.
+- **Data-loss fix chain for `write_file` (#6414):** `9056bac`, `3a125dc`, `2992bf6` (09-27→10-01). A lost content section from the tool-call parser used to truncate files to 0 bytes while returning success. Now refused, blank writes published atomically. *Why it matters:* agent-written files (incl. scheduled-task output) could silently be wiped; relevant to the manage_tasks tool-call parsing bug we watch (#5757).
+- **Memory fix (#6342, `6749d6c`):** blank `memory_id` on edit/delete matched the *first* stored memory (`startswith("")`). *Why:* silent wrong-memory edit/delete via text-format actions.
+- **Security, on `main` (09-05, GHSA merges "Merge commit from fork"):** bearer API tokens no longer reach privileged agent tools — approval resume refused for bearer callers, approval grants now server-signed, token-driven runs capped to non-admin tool policy. *Why:* a narrow-scope token previously got bash/python with its minter's admin authority. Companion branches (`review/ghsa-86p3-security-forward-fix-2`: inode-alias/workspace-redirect rejection; `fix/api-token-agent-authorization`) exist unmerged to `dev`. Note: author says route-wide scope enforcement is still a separate gap.
+- **#6085 (GHCR registry image + sha-pinned tag in compose) merged 09-29 then immediately reverted** on branch `revert-6085-…` (Boody, 09-29). *Why:* Docker compose image sourcing is in flux — don't pin our compose to it yet; revert not confirmed merged.
+- **Housekeeping:** branch `backup/main-before-history-cleanup-20260910` → `main` history was rewritten ~09-10; re-clone, don't pull, if tracking `main`.
+- **Scheduler / deep-research / Cookbook:** no commits touching these since last review.
+- **External chatter:** nothing new — web search only returned the June launch coverage (stars ~66k then; ~87k now).
 
 ---
 
