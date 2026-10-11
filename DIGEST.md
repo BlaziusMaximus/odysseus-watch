@@ -1,9 +1,9 @@
 # odysseus-watch digest
 <!-- odysseus-dev/odysseus (was pewdiepie-archdaemon/odysseus — org transfer 2026-07-20) -->
 
-**Last reviewed:** 2026-09-16
-**Last reviewed SHA:** `3b6c169` (fix: atomic token cache swap to eliminate race condition (#6280), branch `dev`, 2026-09-13)
-**Prior review:** 2026-08-24 @ `b4d1293`
+**Last reviewed:** 2026-10-11
+**Last reviewed SHA:** `a8c147b` (fix(reminders): retry failed note delivery through the configured channel (#6566), branch `dev`, 2026-10-07)
+**Prior review:** 2026-09-16 @ `3b6c169` (⚠️ no longer exists upstream — history was rewritten, see below)
 
 ---
 
@@ -34,6 +34,23 @@
 | #605 Architecture v3 proposal | **OPEN** | `routes/*` subpackage carve-out continues (task domain moved 08-17) |
 | #3158 PR deny agent tools access to cred/session stores | **CLOSED unmerged** | still no replacement; #5817 gate reduces blast radius only |
 | #236 PR SOPS encrypted-at-rest secrets | **CLOSED unmerged** | still not landed |
+
+---
+
+## 2026-10-11 — review (delta since 2026-09-16)
+
+_Caveat: the GitHub connector is scoped to this repo only, so upstream issues/PRs/releases/stars were NOT queryable this run. Everything below is from the `dev` git history (≈442 commits since 09-13). Watching-list issue states are unverified._
+
+- **⚠️ Upstream history was rewritten.** `main` backed up as `backup/main-before-history-cleanup-20260910`, and our old anchor `3b6c169` no longer exists on `dev`. *Why it matters:* anything of ours pinned to an old SHA won't fetch/rebase cleanly; re-anchor on the new history. No tags/Releases yet (1.0.3 line still unreleased; `main` last synced 09-07 via #6260).
+- **Agent-authority series finally moved (watch #5815).** Not as numbered slices, but as a big wave of runtime work 10-01→10-06: server request authority, containment of every Python/Bash/PTY/tmux execution, resource-identity binding (fs/process/browser/remote), a durable effects journal requiring evidence for "done" claims. *Why it matters:* this is the substance of the promised slices 2–4; confirm #5815's status by hand.
+- **Security default flipped:** `ee13ed1` post-external-context approval gate now **on by default** (opt out with `ODYSSEUS_TOOL_APPROVAL_GATE=0`). *Why it matters:* an email/fetched page can no longer silently reach send/delete/bulk-email tools. Expect more approval prompts in our setup.
+- **Security sweep 10-05/06 (`pre-ajax` release freeze, #6503):** subprocess env allowlist + credential scrubbing (`2a3d0c6`), delegated authority enforced in local web fetches, workspace-existence-check confinement, regex- and parser-DoS fixes, host-bridge request hardening, registered-endpoint authority, session cost-ledger key isolation, SVG DOM reparse fix, CodeQL fixes. *Why it matters:* child processes no longer inherit provider tokens/DB URLs — check our agent tooling doesn't rely on inherited env.
+- **Task scheduler:** scheduled remote SSH without scope is now deterministically refused (`29c31a4`); tasks recover registered-endpoint runtime credentials (`9aa58b2`); singleflight cache cleanup on cancel (`6e4b3aa`); reminders retry failed note delivery via configured channel (#6566). *Why it matters:* unattended jobs that SSH out may start failing by design.
+- **Deep research:** big 09-17 burst — required-research-before-synthesis, bounded breadth/depth recovery, distinct refinements, reject fabricated follow-up queries, stream answer tokens while reconciling drafts; accessible research map restored (09-22). *Why it matters:* deep-research behavior is materially different from our pinned build.
+- **Cookbook:** local control enforced across Cookbook wrappers (`3834cd7`); pid sweep skipped on hosts without procfs (`30ef765`).
+- **Other:** #6342 blank `memory_id` rejected on edit/delete; ipv6-localhost loopback policy honored; Windows bash/PTY fixes; CI now 4 pytest shards; release smoke suite added; new top-level SECURITY.md, THREAT_MODEL.md, ROADMAP.md. *Why it matters:* THREAT_MODEL/ROADMAP are worth a skim for #3158/#236-type gaps.
+- **Contributors:** ~197 commits Alexandre Teixeira, ~173 pewdiepie-archdaemon, ~65 Léo — dev is now dominated by an integration/"wave" branch workflow.
+- **External chatter:** web search surfaced only launch-era coverage (MindStudio, HN thread, DEV) — nothing new since last run.
 
 ---
 
