@@ -1,9 +1,9 @@
 # odysseus-watch digest
 <!-- odysseus-dev/odysseus (was pewdiepie-archdaemon/odysseus — org transfer 2026-07-20) -->
 
-**Last reviewed:** 2026-09-16
-**Last reviewed SHA:** `3b6c169` (fix: atomic token cache swap to eliminate race condition (#6280), branch `dev`, 2026-09-13)
-**Prior review:** 2026-08-24 @ `b4d1293`
+**Last reviewed:** 2026-10-18
+**Last reviewed SHA:** `9712a54` (Merge PR #6434 oauth-expired-state, branch `dev`, 2026-10-16)
+**Prior review:** 2026-09-16 @ `3b6c169`
 
 ---
 
@@ -34,6 +34,40 @@
 | #605 Architecture v3 proposal | **OPEN** | `routes/*` subpackage carve-out continues (task domain moved 08-17) |
 | #3158 PR deny agent tools access to cred/session stores | **CLOSED unmerged** | still no replacement; #5817 gate reduces blast radius only |
 | #236 PR SOPS encrypted-at-rest secrets | **CLOSED unmerged** | still not landed |
+
+---
+
+## 2026-10-18 — review (delta since 2026-09-16, `3b6c169`…`9712a54`)
+
+_Caveat: GitHub API tools can't reach `odysseus-dev/odysseus` from this session (git read only), so this is from commit history + public pages. Issue/PR open-closed counts and new-issue list not collected._
+
+**Watching**
+- **#5815 agent authority** — still OPEN, now "1 of 6" slices done (was "1 of 4"); six sub-issues filed 08-17 (#6083/#6090–#6093/#6103), labelled p2 on 10-01. Why it matters: the *work* is landing as a big in-repo "Wave 3/4/5" effort (see below) even though the sub-issues haven't closed.
+- **#5757** (manage_tasks JSON-as-text) and **#5792** (IMAP folders) — both still OPEN, triaged `p2` 10-01; fix PRs #5790 / #5791 exist but unmerged.
+- No movement seen on #3136, #3148, #605, #4991 (no matching commits).
+
+**Security (dominant theme, ~25 commits)**
+- **Pre-ajax security sweep (10-05/06):** endpoint authority, browser boundaries, host-bridge requests, regex/parser DoS, workspace-existence confinement, session-cost-ledger key isolation, CodeQL fixes. Why: broad hardening, mostly invisible to users.
+- **`ee13ed1` post-external-context approval gate ON by default** — this is the follow-through on #5817. Behavior change: agents will prompt more.
+- **`82cfd7d` delegated authority enforced in local web fetches**; **`2a3d0c6` subprocess env sanitized / credentials scrubbed.**
+- **#6268 deny generated-image access when ownership check fails** (10-14); **#6029 `AUTH_ENABLED=false` honored in admin-gated config routes** (10-14) — check this one if running no-login.
+- **Runtime containment/authority, Waves 3–5 (10-01→10-03):** process/PTY/job/browser/remote resources bound to authority, functional bwrap containment in CI, durable append-only effect log. Why: this is the deterministic-execution-authority design #5815 asked for.
+
+**Scheduler / Cookbook / research**
+- **#6566 reminders retry failed note delivery via configured channel**; `9aa58b2` scheduled tasks recover registered-endpoint credentials; `29c31a4` remote scheduled SSH refused deterministically when unscoped.
+- **Cookbook:** `3834cd7` local control enforced across Cookbook wrappers; `30ef765` pid sweep skipped without procfs. Why: scheduler/Cookbook are now under the new authority model — expect stricter behavior on scheduled shell jobs.
+- Nothing notable on deep-research.
+
+**Release / infra**
+- **Still no GitHub Release or tags.** But history was restructured: root commit is now "Odysseus v1.0", `dev` carries a `release/pre-ajax-freeze2` merge (10-06) and a "release smoke suite" (09-30). A cut looks close.
+- **#6166 Docker: ChromaDB volume mounted where image persists** (10-14) — likely affects our Compose; check we weren't losing vector data.
+- Commit volume jumped: **469 commits** in 32 days (mostly the wave merges above).
+
+**Other**
+- #6693 skills tagged remote-only; #6495 attach Notes/Todos as Agent context; #6572 opt-in reasoning effort for utility calls; #6643 published skills injected with Auto-approve off.
+
+**External**
+- Coverage is still launch-era (OpenSourceForU, TBS News, DEV, MindStudio review); one source cites ~87k stars as of 09-12. Nothing new/critical, no security disclosures found.
 
 ---
 
