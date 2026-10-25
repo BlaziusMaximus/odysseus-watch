@@ -1,13 +1,13 @@
 # odysseus-watch digest
 <!-- odysseus-dev/odysseus (was pewdiepie-archdaemon/odysseus — org transfer 2026-07-20) -->
 
-**Last reviewed:** 2026-09-16
-**Last reviewed SHA:** `3b6c169` (fix: atomic token cache swap to eliminate race condition (#6280), branch `dev`, 2026-09-13)
-**Prior review:** 2026-08-24 @ `b4d1293`
+**Last reviewed:** 2026-10-25
+**Last reviewed SHA:** `9d0d372` (fix(deps): require Pillow 13 with compatible FastEmbed (#6845), branch `dev`, 2026-10-25)
+**Prior review:** 2026-09-16 @ `3b6c169`
 
 ---
 
-## TL;DR for Adam
+## TL;DR for Adam (as of 2026-09-16 — newest entry is below the Watching table)
 
 - **Quiet, healthy cycle — no purge.** 17 commits on `dev` since the last review (`b4d1293`…`3b6c169`), 14 PRs merged, 8 closed-unmerged (mostly Dependabot + two junk PRs "Main"/"Work"). ~62 new issues opened in the window. **1,205 open** (was ~1,109 on 08-24). Stars ~**87.3k** (was ~86.1k), 887 forks (was 621 on 07-28).
 - **The big story: a 1.0 release line started.** `chore(release): align dev version with 1.0.3` (#6168, 08-25) + `fix(image): prepare v1.0.3 hotfix` (#6167) + `chore(release): sync main with dev` (**#6260, merged 09-07**). Odysseus has always shipped from `dev` with no Releases/tags — a `main` sync means they're preparing to actually cut a release. Watch for a GitHub Release.
@@ -34,6 +34,44 @@
 | #605 Architecture v3 proposal | **OPEN** | `routes/*` subpackage carve-out continues (task domain moved 08-17) |
 | #3158 PR deny agent tools access to cred/session stores | **CLOSED unmerged** | still no replacement; #5817 gate reduces blast radius only |
 | #236 PR SOPS encrypted-at-rest secrets | **CLOSED unmerged** | still not landed |
+
+---
+
+## 2026-10-25 — review (delta since 2026-09-16)
+
+*Caveat: the GitHub connector was scoped to this repo only, so commits come from a `dev` clone and issue/star data from the public API. Merged-PR/new-issue lists and the 3b6c169 boundary were not enumerated; window is by date (09-13 → 10-25).*
+
+- **Stars ~94.4k (was ~87.3k), forks 1,753 (was 887), open issues+PRs 1,516 (was 1,205 issues).** Forks doubled in 6 weeks.
+- **No GitHub Release or tag yet** despite the 1.0.3 prep in September. Still shipping from `dev`.
+
+### Watching
+- **#5815 agent-authority umbrella: still OPEN**, last touched 10-01. But the slices are landing under other names: `ee13ed1` keeps the post-external-context approval gate on by default, `82cfd7d` enforces delegated authority in local web fetches, `9ee614e` enforces registered-endpoint authority, and the "runtime resource authority" waves (process/job/browser/remote resources bound to authority, `9d02571` server request authority) merged 10-01 to 10-03. This is the real follow-through, and #5815 just hasn't been updated.
+- **#5757, #5792, #5788, #3136, #3148, #605:** all still open, no movement (last updated ~10-01/02).
+- **#4991 (prompt-injection guard benchmark on small models): open, updated today (10-25).** Someone is active on it.
+- **#3158 / #236:** nothing new. The 10-02 `2a3d0c6` subprocess env sanitization and credential scrubbing partly overlaps the #3158 goal.
+
+### Security (priority 2)
+- **#6316, #6327 (10-24): SSRF blocked for user-supplied model endpoint URLs and the `manage_endpoints` agent tool.** Matters because endpoints are the main user-configurable URL surface.
+- **#6791 / #6788 (10-24) plus a 10-21 cluster: outbound-HTTPS trust refresh.** Incident CAs are distrusted in Chromium and gRPC, and custom trust stores are checked. SearXNG is bumped to a corrected upstream, and supporting services are hardened.
+- **#6268 (10-14): generated-image access denied when ownership verification fails.** Looks like the fix for the gallery null-owner class (cf. #3148, which is still open).
+- **#6029 (10-14): `AUTH_ENABLED=false` is honored in admin-gated config routes.**
+- **10-05/06 hardening sweep:** regex and parser DoS paths, workspace existence confinement, host-bridge request boundaries, browser boundaries, session cost-ledger key isolation.
+- **#6705 (10-23): approved bash/python and file writes are sealed to the agent workspace when no workspace is set.**
+
+### Scheduler / deep-research / Cookbook (priority 3)
+- **Scheduler:** #6358 applies the admin-only action policy in `manage_tasks`. #6473 / `35e3b29` stop non-numeric or non-finite research settings from crashing the scheduler (#5049). `9aa58b2` recovers registered-endpoint credentials for tasks. `6e4b3aa` fixes the task singleflight cache leak on cancellation.
+- **Deep research:** a long 09-17 to 09-19 series enforces breadth and distinct refinement, bounds search attempts by depth, and streams answer tokens while reconciling the final draft. This is a rework of research behavior, so expect output changes.
+- **Cookbook:** `30ef765` skips the pid sweep on hosts without procfs, and `3834cd7` enforces local control across the Cookbook wrappers.
+
+### Our-stack / other
+- **#6166 (10-14): the Docker ChromaDB volume is now mounted where the image persists.** Check our Compose. The old mount may mean memory never persisted.
+- **#6845 (10-25): Pillow 13 required with a compatible FastEmbed.** Dependency bump, so rebuild images.
+- **New features:** email export to EML/PDF (#6742), Notes/Todos attachable as Agent context (#6495), opt-in reasoning effort for utility calls (#6572), remote-only skill tag (#6693), chat history exposed to the agent (#6443).
+- **Housekeeping:** the maintainer handbook and governance docs were published, and the repo is on the `odysseus-dev` org (a few commits still reference `pewdiepie-archdaemon`).
+- **Our box:** still pinned at `463713c` (June). I couldn't verify this run, but it is now far behind on all the security items above.
+
+### External discussion
+- Nothing new since launch coverage (TBS News, 80.lv, Dexerto, MindStudio). No security write-ups or notable critiques surfaced.
 
 ---
 
