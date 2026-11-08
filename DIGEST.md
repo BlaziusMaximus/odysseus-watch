@@ -1,9 +1,9 @@
 # odysseus-watch digest
 <!-- odysseus-dev/odysseus (was pewdiepie-archdaemon/odysseus — org transfer 2026-07-20) -->
 
-**Last reviewed:** 2026-09-16
-**Last reviewed SHA:** `3b6c169` (fix: atomic token cache swap to eliminate race condition (#6280), branch `dev`, 2026-09-13)
-**Prior review:** 2026-08-24 @ `b4d1293`
+**Last reviewed:** 2026-11-08
+**Last reviewed SHA:** `1c15090` (fix(calendar): render multi-day events within their day cells (#6948), branch `dev`, 2026-11-08)
+**Prior review:** 2026-09-16 @ `3b6c169`
 
 ---
 
@@ -34,6 +34,44 @@
 | #605 Architecture v3 proposal | **OPEN** | `routes/*` subpackage carve-out continues (task domain moved 08-17) |
 | #3158 PR deny agent tools access to cred/session stores | **CLOSED unmerged** | still no replacement; #5817 gate reduces blast radius only |
 | #236 PR SOPS encrypted-at-rest secrets | **CLOSED unmerged** | still not landed |
+
+---
+
+## 2026-11-08 — review (delta since 2026-09-16 @ `3b6c169`)
+
+*Caveat: this run could read git history + GitHub search, but not the issue/release API for odysseus-dev/odysseus (access not enabled). Watch-list states below come from public issue pages.*
+
+**Numbers:** ~754 commits on `dev`, ~166 PRs merged, ~28 closed-unmerged, ~290 new issues; **1,118 open issues** (down from 1,205 — someone triaged). Still **no GitHub Releases or tags**.
+
+### Watching
+- **#5815 agent authority umbrella — still OPEN, now broken into slices:** #6091 (slice 2, process sandbox; PR #6120 + seccomp #6119 / egress #6118 / Docker-AppArmor #6121), #6083 (slice 3), #6092 (slice 4). Relabeled p2 on 10-01. Slice PR merge status not confirmed — the "no slice 2" worry is now "slice 2 designed, not confirmed landed."
+- **#5757** (manage_tasks JSON-as-text) — OPEN; fix PR #5790 referenced, not confirmed merged.
+- **#5792** (non-English IMAP folders) — OPEN; fix PR #5791 referenced, labeled "ready for review."
+- **#3148** (gallery null-owner bypass) — OPEN, now **p1** (10-02). Related: #6268 (10-14) denies generated-image access when ownership check fails.
+- **#4991** (prompt-injection guard benchmark) — OPEN, no PR in this repo; #6030 offline benchmark auditor merged adjacent.
+- **#5788, #3136, #605** — not re-checked this run.
+
+### Security (biggest cluster this cycle)
+- **Pre-Ajax release freeze (#6503, 10-06):** a big security sweep — regex/parser DoS removal, host-bridge hardening, workspace confinement, delegated authority in local web fetch, subprocess env credential scrubbing (`2a3d0c6`). Why it matters: the post-external-context approval gate is now **on by default** (`ee13ed1`).
+- **CA trust incident handling (#6785, #6791, `cd9f1f7`):** rejects "published compromised intermediates" as trust anchors; refreshes outbound HTTPS trust + SearXNG. Why: if our Docker image predates this, rebuild.
+- **SSRF closures:** #6316 (model endpoint URLs), #6327 (manage_endpoints tool), #6355 (user-supplied IMAP/SMTP hosts).
+- **Admin/auth:** #6832 revoke API tokens on admin demotion, #6830 privilege type validation, #6821 username validation, #6357 agent can't re-enable admin-disabled tools, #6353 non-admin cookbook tools blocked.
+- **#6705 / #6722:** approved bash/python/file writes sealed to agent workspace when none set.
+- **#6956:** Docker image requires patched Debian Brotli decoder (dependency CVE).
+
+### Task scheduler / deep research / Cookbook
+- **Scheduler:** #6358 admin-only action policy in `manage_tasks`; #6825 refuses cron with seconds field; #6473 non-numeric research settings fall back to defaults; #6926 daily-brief calendars in local time; singleflight cache cleanup (`6e4b3aa`); unscoped remote scheduled SSH deterministically refused (`29c31a4`).
+- **Deep research:** #7043 keep reports after failed deletion; #6929 math typeset in visual reports.
+- **Cookbook:** #6969 endpoints preserved across model launches; #7031 endpoint registration refactor; #6728 vLLM too-old NVIDIA driver diagnosis; #6080 stale llama-server shim recovery; #6369 NameError in hf-gguf-files; Cookbook wrappers enforce local control (`3834cd7`).
+
+### Other notable
+- Photo/image **editor** overhaul (#6741, #6739, #6992); **email** EML/PDF export (#6742); **Windows** test-compat sweep; maintainer governance handbook (#6736); latest: #7054 web-search query fix (11-06), #6768 timeout message in chat (11-08).
+
+### External
+- Coverage is still launch-era (May 31, 2026 release) explainers and Railway templates; mixed notes on hardware/install difficulty. Nothing new of significance; search surfaced no discussion of the security work or the org move.
+
+### Action for Adam
+- Our box was ~920 commits behind in September; it is now ~1,700. The CA-trust and SSRF fixes alone justify updating.
 
 ---
 
