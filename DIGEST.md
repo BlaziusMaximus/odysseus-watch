@@ -48,7 +48,7 @@
 - **#5757** (manage_tasks JSON-as-text) — OPEN; fix PR #5790 referenced, not confirmed merged.
 - **#5792** (non-English IMAP folders) — OPEN; fix PR #5791 referenced, labeled "ready for review."
 - **#3148** (gallery null-owner bypass) — OPEN, now **p1** (10-02). Related: #6268 (10-14) denies generated-image access when ownership check fails.
-- **#4991** (prompt-injection guard benchmark) — OPEN, no PR in this repo; #6030 offline benchmark auditor merged adjacent.
+- **#4991** (prompt-injection guard benchmark) — OPEN, no PR in this repo; #7030 offline benchmark evidence auditor merged adjacent.
 - **#5788, #3136, #605** — not re-checked this run.
 
 ### Security (biggest cluster this cycle)
